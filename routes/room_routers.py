@@ -4,6 +4,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 from database import users_collection, game_sessions_collection, db
 
+from pydantic import BaseModel
+
 router = APIRouter()
 
 
@@ -16,13 +18,16 @@ async def generate_room_code():
             return code
 
 
+# Define a Pydantic model for the request body
+class CreateRoomRequest(BaseModel):
+    admin_name: str
+
 @router.post("/create_room")
-async def create_room(admin_name: str):
-    """Creates a room with a unique 4-digit room code."""
+async def create_room(data: CreateRoomRequest):
     room_code = await generate_room_code()
     room_data = {
         "room_code": room_code,
-        "admin_name": admin_name,
+        "admin_name": data.admin_name,
         "is_active": True,
     }
     result = await game_sessions_collection.insert_one(room_data)

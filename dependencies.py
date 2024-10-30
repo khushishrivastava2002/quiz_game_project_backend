@@ -1,11 +1,9 @@
-from fastapi import Depends, HTTPException, status, Request
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import HTTPException, status, Request
 from jose import JWTError, jwt
 from utils import SECRET_KEY, ALGORITHM
 from database import users_collection
 
 async def get_current_user(request: Request):
-    # Retrieve token from the access_token cookie
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")

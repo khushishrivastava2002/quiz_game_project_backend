@@ -43,15 +43,14 @@ async def login(user: UserLogin):
     response.set_cookie(
         key="access_token",
         value=access_token,
-        httponly=True,  # Prevents JavaScript from accessing the cookie
-        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Set expiration
-        samesite="strict"  # Optional: improves security by restricting cross-site cookie access
+        httponly=True, 
+        max_age=ACCESS_TOKEN_EXPIRE_MINUTES * 60, 
+        samesite="strict"
     )
     return response
 
 @router.get("/logout")
-async def logout(current_user: dict = Depends(get_current_user)):
-    # User is already authenticated due to the dependency
+async def logout():
     response = JSONResponse({"message": "User logged out successfully"})
     response.delete_cookie(key="access_token")  # Clear the access token cookie
     return response
