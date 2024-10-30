@@ -4,6 +4,8 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
 from database import users_collection, game_sessions_collection, db
 
+from pydantic import BaseModel
+
 router = APIRouter()
 
 
@@ -16,13 +18,16 @@ async def generate_room_code():
             return code
 
 
+# Define a Pydantic model for the request body
+class CreateRoomRequest(BaseModel):
+    admin_name: str
+
 @router.post("/create_room")
-async def create_room(admin_name: str):
-    """Creates a room with a unique 4-digit room code."""
+async def create_room(data: CreateRoomRequest):
     room_code = await generate_room_code()
     room_data = {
         "room_code": room_code,
-        "admin_name": admin_name,
+        "admin_name": data.admin_name,
         "is_active": True,
     }
     result = await game_sessions_collection.insert_one(room_data)
@@ -32,15 +37,17 @@ async def create_room(admin_name: str):
         raise HTTPException(status_code=500, detail="Failed to create room")
 
 
+
 @router.post("/join_room")
 async def join_room(room_code: str, user_name: str):
-    """Allows a user to join a room with a valid code."""
+    print(f"Received room_code: {room_code}, user_name: {user_name}")  # Debug log
     room = await game_sessions_collection.find_one({"room_code": room_code, "is_active": True})
     if not room:
+        print("Room not found or inactive")  # Debug log
         raise HTTPException(status_code=404, detail="Room code is not valid or the room is inactive")
-
-    # Add user to the room participants or perform other room join logic here
     return {"message": "Successfully joined the room!"}
+
+
 
 
 @router.post("/end_room")
