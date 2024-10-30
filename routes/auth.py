@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Response
+from passlib.context import CryptContext
 from fastapi.responses import JSONResponse
 from datetime import datetime, timedelta
 from database import users_collection
@@ -7,6 +8,8 @@ from utils import hash_password, verify_password, create_access_token, ACCESS_TO
 from dependencies import get_current_user
 
 router = APIRouter()
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 @router.post("/signup", response_model=UserResponse)
 async def signup(user: UserCreate):
