@@ -90,41 +90,14 @@ manager = ConnectionManager()
 
 @router.websocket("/ws/game/{room_id}")
 async def websocket_game_endpoint(websocket: WebSocket, room_id: str):
-    await manager.connect(websocket)
-    game_state = await start_game_session(room_id)  # Start a new game session
-    
+    await websocket.accept()
     try:
-        while game_state["current_question"] < 10:
-            question_data = await fetch_question(game_state)
-            hint = hide_answer(question_data["answer"])
-            await manager.broadcast({
-                "type": "question",
-                "question": question_data["question"],
-                "hint": hint,
-                "attempts_left": 2
-            })
-            
-            guesses = []
-            while len(guesses) < 2:
-                guess = await websocket.receive_text()
-                correct, updated_hint = check_guess(guess, question_data["answer"], hint)
-                
-                if correct:
-                    await manager.broadcast({"type": "correct", "user": websocket.client, "score": "+4"})
-                    update_score(room_id, websocket.client, +4)
-                    break
-                else:
-                    guesses.append(guess)
-                    if len(guesses) == 2:
-                        hint = reveal_hint(updated_hint)
-                        await manager.broadcast({"type": "hint", "hint": hint})
-            
-            game_state["current_question"] += 1
-            
-        await manager.broadcast({"type": "game_over", "result": "Game Ended"})
-        
+        while True:
+            data = await websocket.receive_text()
+            # Process the received data
+            await websocket.send_text(f"You said: {data}")
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        print(f"Client disconnected from room {room_id}")
 
 
 async def fetch_question(game_state):
